@@ -9,20 +9,16 @@ class FacetWP_Facet_Select2
 
 
     /**
-     * Generate the facet HTML
+     * Load the available choices
      */
-    function render( $params ) {
+    function load_values( $params ) {
         global $wpdb;
 
-
-        $output = '';
         $facet = $params['facet'];
-        $selected_values = (array) $params['selected_values'];
         $where_clause = $params['where_clause'];
 
-
         // Orderby
-        $orderby = 'counter DESC';
+        $orderby = 'counter DESC, f.facet_display_value ASC';
         if ( 'display_value' == $facet['orderby'] ) {
             $orderby = 'f.facet_display_value ASC';
         }
@@ -41,17 +37,24 @@ class FacetWP_Facet_Select2
         ORDER BY $orderby
         LIMIT $limit";
 
-        $output .= '<select class="facetwp-select2">';
-        $output .= '<option value="">- ' . __( 'Any', 'fwp' ) . ' -</option>';
+        return $wpdb->get_results( $sql );
+    }
 
-        $results = $wpdb->get_results( $sql );
 
-        if ( !empty( $results ) ) {
-            foreach ( $results as $result ) {
-                $selected = in_array( $result->facet_value, $selected_values ) ? ' selected' : '';
-                $display_value = "$result->facet_display_value ($result->counter)";
-                $output .= '<option value="' . $result->facet_value . '"' . $selected . '>' . $display_value . '</option>';
-            }
+    /**
+     * Generate the facet HTML
+     */
+    function render( $params ) {
+
+        $output = '';
+        $facet = $params['facet'];
+        $values = (array) $params['values'];
+        $selected_values = (array) $params['selected_values'];
+
+        foreach ( $values as $result ) {
+            $selected = in_array( $result->facet_value, $selected_values ) ? ' selected' : '';
+            $display_value = "$result->facet_display_value ($result->counter)";
+            $output .= '<option value="' . $result->facet_value . '"' . $selected . '>' . $display_value . '</option>';
         }
 
         $output .= '</select>';
