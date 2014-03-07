@@ -12,32 +12,11 @@ class FacetWP_Facet_Select2
      * Load the available choices
      */
     function load_values( $params ) {
-        global $wpdb;
 
-        $facet = $params['facet'];
-        $where_clause = $params['where_clause'];
-
-        // Orderby
-        $orderby = 'counter DESC, f.facet_display_value ASC';
-        if ( 'display_value' == $facet['orderby'] ) {
-            $orderby = 'f.facet_display_value ASC';
-        }
-        elseif ( 'raw_value' == $facet['orderby'] ) {
-            $orderby = 'f.facet_value ASC';
-        }
-
-        // Limit
-        $limit = ctype_digit( $facet['count'] ) ? $facet['count'] : 10;
-
-        $sql = "
-        SELECT f.facet_value, f.facet_display_value, COUNT(*) AS counter
-        FROM {$wpdb->prefix}facetwp_index f
-        WHERE f.facet_name = '{$facet['name']}' $where_clause
-        GROUP BY f.facet_value
-        ORDER BY $orderby
-        LIMIT $limit";
-
-        return $wpdb->get_results( $sql );
+        // Inherit the load_values() method from the Dropdown facet type
+        $helper = FacetWP_Helper::instance();
+        $dropdown_facet = $helper->facet_types['dropdown'];
+        return $dropdown_facet->load_values( $params );
     }
 
 
@@ -50,6 +29,9 @@ class FacetWP_Facet_Select2
         $facet = $params['facet'];
         $values = (array) $params['values'];
         $selected_values = (array) $params['selected_values'];
+
+        $output .= '<select class="facetwp-select2">';
+        $output .= '<option value="">- ' . __( 'Any', 'fwp' ) . ' -</option>';
 
         foreach ( $values as $result ) {
             $selected = in_array( $result->facet_value, $selected_values ) ? ' selected' : '';

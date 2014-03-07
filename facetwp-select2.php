@@ -3,9 +3,11 @@
 Plugin Name: FacetWP - Select2
 Plugin URI: https://facetwp.com/
 Description: Adds the Select2 facet type
-Version: 1.0.1
+Version: 1.1.0
 Author: Matt Gibbs
 Author URI: https://facetwp.com/
+GitHub Plugin URI: https://github.com/mgibbs189/facetwp-select2
+GitHub Branch: 1.1.0
 
 Copyright 2013 Matt Gibbs
 
@@ -51,7 +53,7 @@ function fwps2_init() {
  * Register the facet type
  */
 function fwps2_facet_types( $facet_types ) {
-    include( dirname( __FILE__ ) . '/facet-select2.php' );
+    include( dirname( __FILE__ ) . '/select2.php' );
     $facet_types['select2'] = new FacetWP_Facet_Select2();
     return $facet_types;
 }
