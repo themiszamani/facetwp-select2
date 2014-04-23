@@ -94,13 +94,13 @@ class FacetWP_Facet_Select2
 <script>
 (function($) {
     wp.hooks.addAction('facetwp/refresh/select2', function($this, facet_name) {
+        $this.find('.facetwp-select2').select2('destroy');
         FWP.facets[facet_name] = $this.find('.facetwp-select2').val() || '';
     });
 
     wp.hooks.addAction('facetwp/ready', function() {
         $(document).on('change', '.facetwp-facet .facetwp-select2', function() {
-            $(this).select2('destroy');
-            FWP.refresh();
+            FWP.autoload();
         });
     });
 
