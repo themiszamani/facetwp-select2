@@ -14,8 +14,7 @@ class FacetWP_Facet_Select2
     function load_values( $params ) {
 
         // Inherit the load_values() method from the Dropdown facet type
-        $helper = FacetWP_Helper::instance();
-        $dropdown_facet = $helper->facet_types['dropdown'];
+        $dropdown_facet = FWP()->helper->facet_types['dropdown'];
         return $dropdown_facet->load_values( $params );
     }
 
