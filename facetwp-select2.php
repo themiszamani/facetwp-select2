@@ -42,10 +42,10 @@ function fwps2_init() {
     add_filter( 'facetwp_facet_types', 'fwps2_facet_types' );
 
     wp_enqueue_script('select2',
-        plugins_url( 'facetwp-select2' ) . '/select2/select2.min.js', array( 'jquery' ), '3.4.6' );
+        plugins_url( 'facetwp-select2' ) . '/select2/select2.min.js', array( 'jquery' ), '3.5.1' );
 
     wp_enqueue_style( 'select2',
-        plugins_url( 'facetwp-select2' ) . '/select2/select2.css', array(), '3.4.6' );
+        plugins_url( 'facetwp-select2' ) . '/select2/select2.css', array(), '3.5.1' );
 }
 
 
