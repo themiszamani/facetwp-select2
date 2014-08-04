@@ -29,7 +29,7 @@ class FacetWP_Facet_Select2
         $values = (array) $params['values'];
         $selected_values = (array) $params['selected_values'];
 
-        $output .= '<select class="facetwp-select2">';
+        $output .= '<select class="facetwp-select2" multiple="multiple">';
         $output .= '<option value="">- ' . __( 'Any', 'fwp' ) . ' -</option>';
 
         foreach ( $values as $result ) {
@@ -50,8 +50,8 @@ class FacetWP_Facet_Select2
         global $wpdb;
 
         $facet = $params['facet'];
-        $selected_values = $params['selected_values'];
-        $selected_values = is_array( $selected_values ) ? $selected_values[0] : $selected_values;
+        $selected_values = (array) $params['selected_values'];
+        $selected_values = implode(',', $selected_values );
 
         $sql = "
         SELECT DISTINCT post_id FROM {$wpdb->prefix}facetwp_index
@@ -94,7 +94,7 @@ class FacetWP_Facet_Select2
 (function($) {
     wp.hooks.addAction('facetwp/refresh/select2', function($this, facet_name) {
         $this.find('.facetwp-select2').select2('destroy');
-        FWP.facets[facet_name] = $this.find('.facetwp-select2').val() || '';
+        FWP.facets[facet_name] = $this.find('.facetwp-select2').val() || [];
     });
 
     wp.hooks.addAction('facetwp/ready', function() {
