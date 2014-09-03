@@ -13,9 +13,8 @@ class FacetWP_Facet_Select2
      */
     function load_values( $params ) {
 
-        // Inherit the load_values() method from the Dropdown facet type
-        $dropdown_facet = FWP()->helper->facet_types['dropdown'];
-        return $dropdown_facet->load_values( $params );
+        // Inherit load_values() from the Dropdown facet type
+        return FWP()->helper->facet_types['dropdown']->load_values( $params );
     }
 
 
@@ -47,16 +46,9 @@ class FacetWP_Facet_Select2
      * Filter the query based on selected values
      */
     function filter_posts( $params ) {
-        global $wpdb;
 
-        $facet = $params['facet'];
-        $selected_values = (array) $params['selected_values'];
-        $selected_values = implode(',', $selected_values );
-
-        $sql = "
-        SELECT DISTINCT post_id FROM {$wpdb->prefix}facetwp_index
-        WHERE facet_name = '{$facet['name']}' AND facet_value IN ('$selected_values')";
-        return $wpdb->get_col( $sql );
+        // Inherit filter_posts() from the Checkboxes facet type
+        return FWP()->helper->facet_types['checkboxes']->filter_posts( $params );
     }
 
 
@@ -69,12 +61,14 @@ class FacetWP_Facet_Select2
 (function($) {
     wp.hooks.addAction('facetwp/load/select2', function($this, obj) {
         $this.find('.facet-source').val(obj.source);
+        $this.find('.type-select2 .facet-operator').val(obj.operator);
         $this.find('.type-select2 .facet-orderby').val(obj.orderby);
         $this.find('.type-select2 .facet-count').val(obj.count);
     });
 
     wp.hooks.addFilter('facetwp/save/select2', function($this, obj) {
         obj['source'] = $this.find('.facet-source').val();
+        obj['operator'] = $this.find('.type-select2 .facet-operator').val();
         obj['orderby'] = $this.find('.type-select2 .facet-orderby').val();
         obj['count'] = $this.find('.type-select2 .facet-count').val();
         return obj;
@@ -119,6 +113,21 @@ class FacetWP_Facet_Select2
      */
     function settings_html() {
 ?>
+        <tr class="facetwp-conditional type-select2">
+            <td>
+                <?php _e('Behavior', 'fwp'); ?>:
+                <div class="facetwp-tooltip">
+                    <span class="icon-question">?</span>
+                    <div class="facetwp-tooltip-content"><?php _e( 'How should multiple selections affect the results?', 'fwp' ); ?></div>
+                </div>
+            </td>
+            <td>
+                <select class="facet-operator">
+                    <option value="and"><?php _e( 'Narrow the result set', 'fwp' ); ?></option>
+                    <option value="or"><?php _e( 'Widen the result set', 'fwp' ); ?></option>
+                </select>
+            </td>
+        </tr>
         <tr class="facetwp-conditional type-select2">
             <td><?php _e('Sort by', 'fwp'); ?>:</td>
             <td>
