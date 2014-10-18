@@ -53,6 +53,17 @@ class FacetWP_Facet_Select2
 
 
     /**
+     * (Front-end) Attach settings to the AJAX response
+     */
+    function settings_js( $params ) {
+        $placeholder = isset( $params['facet']['placeholder'] ) ?
+            $params['facet']['placeholder'] : '';
+
+        return array( 'placeholder' => $placeholder );
+    }
+
+
+    /**
      * Output any admin scripts
      */
     function admin_scripts() {
@@ -63,6 +74,7 @@ class FacetWP_Facet_Select2
         $this.find('.facet-source').val(obj.source);
         $this.find('.type-select2 .facet-operator').val(obj.operator);
         $this.find('.type-select2 .facet-orderby').val(obj.orderby);
+        $this.find('.type-select2 .facet-placeholder').val(obj.placeholder);
         $this.find('.type-select2 .facet-count').val(obj.count);
     });
 
@@ -70,6 +82,7 @@ class FacetWP_Facet_Select2
         obj['source'] = $this.find('.facet-source').val();
         obj['operator'] = $this.find('.type-select2 .facet-operator').val();
         obj['orderby'] = $this.find('.type-select2 .facet-orderby').val();
+        obj['placeholder'] = $this.find('.type-select2 .facet-placeholder').val();
         obj['count'] = $this.find('.type-select2 .facet-count').val();
         return obj;
     });
@@ -98,8 +111,13 @@ class FacetWP_Facet_Select2
     });
 
     $(document).on('facetwp-loaded', function() {
-        $('.facetwp-select2').select2({
-            width: 'element'
+        $('.facetwp-type-select2').each(function() {
+            var facet_name = $(this).attr('data-name');
+            var placeholder = FWP.settings[facet_name] ? FWP.settings[facet_name]['placeholder'] : '';
+            $(this).find('.facetwp-select2').select2({
+                width: 'element',
+                placeholder: placeholder
+            });
         });
     });
 })(jQuery);
@@ -139,9 +157,16 @@ class FacetWP_Facet_Select2
             </td>
         </tr>
         <tr class="facetwp-conditional type-select2">
+            <td><?php _e('Placeholder text', 'fwp'); ?>:</td>
+            <td><input type="text" class="facet-placeholder" value="" /></td>
+        </tr>
+        <tr class="facetwp-conditional type-select2">
             <td>
                 <?php _e('Count', 'fwp'); ?>:
-                <span class="icon-question" title="The number of items to show">?</span>
+                <div class="facetwp-tooltip">
+                    <span class="icon-question">?</span>
+                    <div class="facetwp-tooltip-content">The number of items to show</div>
+                </div>
             </td>
             <td><input type="text" class="facet-count" value="10" /></td>
         </tr>
