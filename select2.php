@@ -32,9 +32,9 @@ class FacetWP_Facet_Select2
         $output .= '<option value="">- ' . __( 'Any', 'fwp' ) . ' -</option>';
 
         foreach ( $values as $result ) {
-            $selected = in_array( $result->facet_value, $selected_values ) ? ' selected' : '';
-            $display_value = "$result->facet_display_value ($result->counter)";
-            $output .= '<option value="' . $result->facet_value . '"' . $selected . '>' . $display_value . '</option>';
+            $selected = in_array( $result['facet_value'], $selected_values ) ? ' selected' : '';
+            $display_value = $result['facet_display_value'] . ' (' . $result['counter'] . ')';
+            $output .= '<option value="' . $result['facet_value'] . '"' . $selected . '>' . $display_value . '</option>';
         }
 
         $output .= '</select>';
