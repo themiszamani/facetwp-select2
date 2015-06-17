@@ -5,6 +5,8 @@ class FacetWP_Facet_Select2
 
     function __construct() {
         $this->label = __( 'Select2', 'fwp' );
+
+        add_filter( 'facetwp_store_unfiltered_post_ids', array( $this, 'store_unfiltered_post_ids' ) );
     }
 
 
@@ -13,7 +15,7 @@ class FacetWP_Facet_Select2
      */
     function load_values( $params ) {
 
-        // Inherit load_values() from the Dropdown facet type
+        // Inherit load_values() from the dropdown facet type
         return FWP()->helper->facet_types['dropdown']->load_values( $params );
     }
 
@@ -28,12 +30,31 @@ class FacetWP_Facet_Select2
         $values = (array) $params['values'];
         $selected_values = (array) $params['selected_values'];
 
-        $output .= '<select class="facetwp-select2" multiple="multiple">';
-        $output .= '<option value="">- ' . __( 'Any', 'fwp' ) . ' -</option>';
+        if ( isset( $facet['hierarchical'] ) && 'yes' == $facet['hierarchical'] ) {
+            $values = FWP()->helper->sort_taxonomy_values( $params['values'], $facet['orderby'] );
+        }
+
+        $label_any = empty( $facet['label_any'] ) ? __( 'Any', 'fwp' ) : $facet['label_any'];
+        $label_any = facetwp_i18n( $label_any );
+
+        $output .= '<select class="facetwp-select2">';
+        $output .= '<option value="">' . esc_attr( $label_any ) . '</option>';
 
         foreach ( $values as $result ) {
             $selected = in_array( $result['facet_value'], $selected_values ) ? ' selected' : '';
-            $display_value = $result['facet_display_value'] . ' (' . $result['counter'] . ')';
+
+            $display_value = '';
+            for ( $i = 0; $i < (int) $result['depth']; $i++ ) {
+                $display_value .= '&nbsp;&nbsp;';
+            }
+
+            // Determine whether to show counts
+            $display_value .= $result['facet_display_value'];
+            $show_counts = apply_filters( 'facetwp_facet_select2_show_counts', true );
+            if ( $show_counts ) {
+                $display_value .= ' (' . $result['counter'] . ')';
+            }
+
             $output .= '<option value="' . $result['facet_value'] . '"' . $selected . '>' . $display_value . '</option>';
         }
 
@@ -47,19 +68,8 @@ class FacetWP_Facet_Select2
      */
     function filter_posts( $params ) {
 
-        // Inherit filter_posts() from the Checkboxes facet type
-        return FWP()->helper->facet_types['checkboxes']->filter_posts( $params );
-    }
-
-
-    /**
-     * (Front-end) Attach settings to the AJAX response
-     */
-    function settings_js( $params ) {
-        $placeholder = isset( $params['facet']['placeholder'] ) ?
-            $params['facet']['placeholder'] : '';
-
-        return array( 'placeholder' => $placeholder );
+        // Inherit filter_posts() from the dropdown facet type
+        return FWP()->helper->facet_types['dropdown']->filter_posts( $params );
     }
 
 
@@ -72,17 +82,19 @@ class FacetWP_Facet_Select2
 (function($) {
     wp.hooks.addAction('facetwp/load/select2', function($this, obj) {
         $this.find('.facet-source').val(obj.source);
-        $this.find('.type-select2 .facet-operator').val(obj.operator);
+        $this.find('.facet-label-any').val(obj.label_any);
+        $this.find('.facet-parent-term').val(obj.parent_term);
         $this.find('.type-select2 .facet-orderby').val(obj.orderby);
-        $this.find('.type-select2 .facet-placeholder').val(obj.placeholder);
+        $this.find('.type-select2 .facet-hierarchical').val(obj.hierarchical);
         $this.find('.type-select2 .facet-count').val(obj.count);
     });
 
     wp.hooks.addFilter('facetwp/save/select2', function($this, obj) {
         obj['source'] = $this.find('.facet-source').val();
-        obj['operator'] = $this.find('.type-select2 .facet-operator').val();
+        obj['label_any'] = $this.find('.type-select2 .facet-label-any').val();
+        obj['parent_term'] = $this.find('.type-select2 .facet-parent-term').val();
         obj['orderby'] = $this.find('.type-select2 .facet-orderby').val();
-        obj['placeholder'] = $this.find('.type-select2 .facet-placeholder').val();
+        obj['hierarchical'] = $this.find('.type-select2 .facet-hierarchical').val();
         obj['count'] = $this.find('.type-select2 .facet-count').val();
         return obj;
     });
@@ -100,24 +112,23 @@ class FacetWP_Facet_Select2
 <script>
 (function($) {
     wp.hooks.addAction('facetwp/refresh/select2', function($this, facet_name) {
-        $this.find('.facetwp-select2').select2('destroy');
-        FWP.facets[facet_name] = $this.find('.facetwp-select2').val() || [];
+        var val = $this.find('.facetwp-select2').val();
+        FWP.facets[facet_name] = val ? [val] : [];
     });
 
     wp.hooks.addAction('facetwp/ready', function() {
         $(document).on('change', '.facetwp-facet .facetwp-select2', function() {
+            var $facet = $(this).closest('.facetwp-facet');
+            if ('' != $facet.find(':selected').val()) {
+                FWP.static_facet = $facet.attr('data-name');
+            }
             FWP.autoload();
         });
     });
 
     $(document).on('facetwp-loaded', function() {
-        $('.facetwp-type-select2').each(function() {
-            var facet_name = $(this).attr('data-name');
-            var placeholder = FWP.settings[facet_name] ? FWP.settings[facet_name]['placeholder'] : '';
-            $(this).find('.facetwp-select2').select2({
-                width: 'element',
-                placeholder: placeholder
-            });
+        $('.facetwp-select2').select2({
+            width: '100%'
         });
     });
 })(jQuery);
@@ -133,43 +144,81 @@ class FacetWP_Facet_Select2
 ?>
         <tr class="facetwp-conditional type-select2">
             <td>
-                <?php _e('Behavior', 'fwp'); ?>:
+                <?php _e( 'Default label', 'fwp' ); ?>:
                 <div class="facetwp-tooltip">
                     <span class="icon-question">?</span>
-                    <div class="facetwp-tooltip-content"><?php _e( 'How should multiple selections affect the results?', 'fwp' ); ?></div>
+                    <div class="facetwp-tooltip-content">
+                        Customize the first option label (default: "Any")
+                    </div>
                 </div>
             </td>
             <td>
-                <select class="facet-operator">
-                    <option value="and"><?php _e( 'Narrow the result set', 'fwp' ); ?></option>
-                    <option value="or"><?php _e( 'Widen the result set', 'fwp' ); ?></option>
-                </select>
+                <input type="text" class="facet-label-any" value="<?php _e( 'Any', 'fwp' ); ?>" />
+            </td>
+        </tr>
+        <tr class="facetwp-conditional type-select2">
+            <td>
+                <?php _e('Parent term', 'fwp'); ?>:
+                <div class="facetwp-tooltip">
+                    <span class="icon-question">?</span>
+                    <div class="facetwp-tooltip-content">
+                        If <strong>Data source</strong> is a taxonomy, enter the
+                        parent term's ID if you want to show child terms.
+                        Otherwise, leave blank.
+                    </div>
+                </div>
+            </td>
+            <td>
+                <input type="text" class="facet-parent-term" value="" />
             </td>
         </tr>
         <tr class="facetwp-conditional type-select2">
             <td><?php _e('Sort by', 'fwp'); ?>:</td>
             <td>
                 <select class="facet-orderby">
-                    <option value="count">Facet Count</option>
-                    <option value="display_value">Display Value</option>
-                    <option value="raw_value">Raw Value</option>
+                    <option value="count"><?php _e( 'Facet Count', 'fwp' ); ?></option>
+                    <option value="display_value"><?php _e( 'Display Value', 'fwp' ); ?></option>
+                    <option value="raw_value"><?php _e( 'Raw Value', 'fwp' ); ?></option>
                 </select>
             </td>
         </tr>
         <tr class="facetwp-conditional type-select2">
-            <td><?php _e('Placeholder text', 'fwp'); ?>:</td>
-            <td><input type="text" class="facet-placeholder" value="" /></td>
+            <td>
+                <?php _e('Hierarchical', 'fwp'); ?>:
+                <div class="facetwp-tooltip">
+                    <span class="icon-question">?</span>
+                    <div class="facetwp-tooltip-content"><?php _e( 'Is this a hierarchical taxonomy?', 'fwp' ); ?></div>
+                </div>
+            </td>
+            <td>
+                <select class="facet-hierarchical">
+                    <option value="no"><?php _e( 'No', 'fwp' ); ?></option>
+                    <option value="yes"><?php _e( 'Yes', 'fwp' ); ?></option>
+                </select>
+            </td>
         </tr>
         <tr class="facetwp-conditional type-select2">
             <td>
                 <?php _e('Count', 'fwp'); ?>:
                 <div class="facetwp-tooltip">
                     <span class="icon-question">?</span>
-                    <div class="facetwp-tooltip-content">The number of items to show</div>
+                    <div class="facetwp-tooltip-content"><?php _e( 'The maximum number of facet choices to show', 'fwp' ); ?></div>
                 </div>
             </td>
             <td><input type="text" class="facet-count" value="10" /></td>
         </tr>
 <?php
+    }
+
+
+    /**
+     * Store unfiltered post IDs if a select2 facet exists
+     */
+    function store_unfiltered_post_ids( $boolean ) {
+        if ( FWP()->helper->facet_setting_exists( 'type', 'select2' ) ) {
+            return true;
+        }
+
+        return $boolean;
     }
 }
