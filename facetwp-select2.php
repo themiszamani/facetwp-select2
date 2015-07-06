@@ -3,7 +3,7 @@
 Plugin Name: FacetWP - Select2
 Plugin URI: https://facetwp.com/
 Description: Adds the Select2 facet type
-Version: 1.3
+Version: 1.3.1
 Author: Matt Gibbs
 Author URI: https://facetwp.com/
 GitHub Plugin URI: https://github.com/FacetWP/facetwp-select2
@@ -39,8 +39,18 @@ class FWP_Select2
         add_filter( 'facetwp_selections_multiple', array( $this, 'selections_multiple' ) );
 
         $plugins_url = plugins_url( 'facetwp-select2' );
-        wp_enqueue_script( 'select2', $plugins_url . '/select2/select2.min.js', array( 'jquery' ), '4.0.0' );
-        wp_enqueue_style( 'select2', $plugins_url . '/select2/select2.min.css', array(), '4.0.0' );
+
+        // ACF5 ships with an older version
+        wp_deregister_script( 'select2' );
+        wp_deregister_style( 'select2' );
+
+        // Register
+        wp_register_script( 'select2', $plugins_url . '/select2/select2.min.js', array( 'jquery' ), '4.0.0' );
+        wp_register_style( 'select2', $plugins_url . '/select2/select2.min.css', array(), '4.0.0' );
+
+        // Enqueue
+        wp_enqueue_script( 'select2' );
+        wp_enqueue_style( 'select2' );
     }
 
 
