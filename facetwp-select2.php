@@ -36,7 +36,10 @@ class FWP_Select2
 
     function init() {
         add_filter( 'facetwp_facet_types', array( $this, 'register_facet_type' ) );
-        add_filter( 'facetwp_selections_multiple', array( $this, 'selections_multiple' ) );
+
+        if ( is_admin() ) {
+            return;
+        }
 
         $plugins_url = plugins_url( 'facetwp-select2' );
 
@@ -57,12 +60,6 @@ class FWP_Select2
     function register_facet_type( $facet_types ) {
         include( dirname( __FILE__ ) . '/select2.php' );
         $facet_types['select2'] = new FacetWP_Facet_Select2();
-        return $facet_types;
-    }
-
-
-    function selections_multiple( $facet_types ) {
-        $facet_types[] = 'select2';
         return $facet_types;
     }
 }
