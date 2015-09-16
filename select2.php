@@ -84,18 +84,18 @@ class FacetWP_Facet_Select2
         $this.find('.facet-source').val(obj.source);
         $this.find('.facet-label-any').val(obj.label_any);
         $this.find('.facet-parent-term').val(obj.parent_term);
-        $this.find('.type-select2 .facet-orderby').val(obj.orderby);
-        $this.find('.type-select2 .facet-hierarchical').val(obj.hierarchical);
-        $this.find('.type-select2 .facet-count').val(obj.count);
+        $this.find('.facet-orderby').val(obj.orderby);
+        $this.find('.facet-hierarchical').val(obj.hierarchical);
+        $this.find('.facet-count').val(obj.count);
     });
 
     wp.hooks.addFilter('facetwp/save/select2', function($this, obj) {
         obj['source'] = $this.find('.facet-source').val();
-        obj['label_any'] = $this.find('.type-select2 .facet-label-any').val();
-        obj['parent_term'] = $this.find('.type-select2 .facet-parent-term').val();
-        obj['orderby'] = $this.find('.type-select2 .facet-orderby').val();
-        obj['hierarchical'] = $this.find('.type-select2 .facet-hierarchical').val();
-        obj['count'] = $this.find('.type-select2 .facet-count').val();
+        obj['label_any'] = $this.find('.facet-label-any').val();
+        obj['parent_term'] = $this.find('.facet-parent-term').val();
+        obj['orderby'] = $this.find('.facet-orderby').val();
+        obj['hierarchical'] = $this.find('.facet-hierarchical').val();
+        obj['count'] = $this.find('.facet-count').val();
         return obj;
     });
 })(jQuery);
@@ -142,7 +142,7 @@ class FacetWP_Facet_Select2
      */
     function settings_html() {
 ?>
-        <tr class="facetwp-conditional type-select2">
+        <tr>
             <td>
                 <?php _e( 'Default label', 'fwp' ); ?>:
                 <div class="facetwp-tooltip">
@@ -156,7 +156,7 @@ class FacetWP_Facet_Select2
                 <input type="text" class="facet-label-any" value="<?php _e( 'Any', 'fwp' ); ?>" />
             </td>
         </tr>
-        <tr class="facetwp-conditional type-select2">
+        <tr>
             <td>
                 <?php _e('Parent term', 'fwp'); ?>:
                 <div class="facetwp-tooltip">
@@ -172,7 +172,7 @@ class FacetWP_Facet_Select2
                 <input type="text" class="facet-parent-term" value="" />
             </td>
         </tr>
-        <tr class="facetwp-conditional type-select2">
+        <tr>
             <td><?php _e('Sort by', 'fwp'); ?>:</td>
             <td>
                 <select class="facet-orderby">
@@ -182,7 +182,7 @@ class FacetWP_Facet_Select2
                 </select>
             </td>
         </tr>
-        <tr class="facetwp-conditional type-select2">
+        <tr>
             <td>
                 <?php _e('Hierarchical', 'fwp'); ?>:
                 <div class="facetwp-tooltip">
@@ -197,7 +197,7 @@ class FacetWP_Facet_Select2
                 </select>
             </td>
         </tr>
-        <tr class="facetwp-conditional type-select2">
+        <tr>
             <td>
                 <?php _e('Count', 'fwp'); ?>:
                 <div class="facetwp-tooltip">
