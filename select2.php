@@ -34,11 +34,19 @@ class FacetWP_Facet_Select2
             $values = FWP()->helper->sort_taxonomy_values( $params['values'], $facet['orderby'] );
         }
 
+        $multiple = '';
+        if ( isset( $facet['multiple'] ) && 'yes' == $facet['multiple'] ) {
+            $multiple = ' multiple';
+        }
+
         $label_any = empty( $facet['label_any'] ) ? __( 'Any', 'fwp' ) : $facet['label_any'];
         $label_any = facetwp_i18n( $label_any );
 
-        $output .= '<select class="facetwp-select2">';
-        $output .= '<option value="">' . esc_attr( $label_any ) . '</option>';
+        $output .= '<select class="facetwp-select2"' . $multiple . ' placeholder="' . esc_attr( $label_any ) . '">';
+
+        if ( empty( $multiple ) ) {
+            $output .= '<option value="">' . esc_attr( $label_any ) . '</option>';
+        }
 
         foreach ( $values as $result ) {
             $selected = in_array( $result['facet_value'], $selected_values ) ? ' selected' : '';
@@ -69,7 +77,8 @@ class FacetWP_Facet_Select2
     function filter_posts( $params ) {
 
         // Inherit filter_posts() from the dropdown facet type
-        return FWP()->helper->facet_types['dropdown']->filter_posts( $params );
+        $params['facet']['operator'] = 'or';
+        return FWP()->helper->facet_types['checkboxes']->filter_posts( $params );
     }
 
 
@@ -83,6 +92,7 @@ class FacetWP_Facet_Select2
     wp.hooks.addAction('facetwp/load/select2', function($this, obj) {
         $this.find('.facet-source').val(obj.source);
         $this.find('.facet-label-any').val(obj.label_any);
+        $this.find('.facet-multiple').val(obj.multiple);
         $this.find('.facet-parent-term').val(obj.parent_term);
         $this.find('.facet-orderby').val(obj.orderby);
         $this.find('.facet-hierarchical').val(obj.hierarchical);
@@ -92,6 +102,7 @@ class FacetWP_Facet_Select2
     wp.hooks.addFilter('facetwp/save/select2', function($this, obj) {
         obj['source'] = $this.find('.facet-source').val();
         obj['label_any'] = $this.find('.facet-label-any').val();
+        obj['multiple'] = $this.find('.facet-multiple').val();
         obj['parent_term'] = $this.find('.facet-parent-term').val();
         obj['orderby'] = $this.find('.facet-orderby').val();
         obj['hierarchical'] = $this.find('.facet-hierarchical').val();
@@ -113,7 +124,22 @@ class FacetWP_Facet_Select2
 (function($) {
     wp.hooks.addAction('facetwp/refresh/select2', function($this, facet_name) {
         var val = $this.find('.facetwp-select2').val();
-        FWP.facets[facet_name] = val ? [val] : [];
+        if (val) {
+            val = $.isArray(val) ? val : [val];
+        }
+        else {
+            val = [];
+        }
+        FWP.facets[facet_name] = val;
+    });
+
+    wp.hooks.addFilter('facetwp/selections/select2', function(output, params) {
+        var labels = [];
+        $.each(params.selected_values, function(idx, val) {
+            var label = params.el.find('.facetwp-select2 option[value="' + val + '"]').text();
+            labels.push(label);
+        });
+        return labels.join(' / ');
     });
 
     wp.hooks.addAction('facetwp/ready', function() {
@@ -127,8 +153,13 @@ class FacetWP_Facet_Select2
     });
 
     $(document).on('facetwp-loaded', function() {
-        $('.facetwp-select2').select2({
-            width: '100%'
+        $('.facetwp-select2').each(function() {
+            var $this = $(this);
+
+            $(this).select2({
+                width: '100%',
+                placeholder: $this.attr('placeholder')
+            })
         });
     });
 })(jQuery);
@@ -158,7 +189,18 @@ class FacetWP_Facet_Select2
         </tr>
         <tr>
             <td>
-                <?php _e('Parent term', 'fwp'); ?>:
+                <?php _e( 'Multi-select?', 'fwp' ); ?>:
+            </td>
+            <td>
+                <select class="facet-multiple">
+                    <option value="no"><?php _e( 'No', 'fwp' ); ?></option>
+                    <option value="yes"><?php _e( 'Yes', 'fwp' ); ?></option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <?php _e( 'Parent term', 'fwp' ); ?>:
                 <div class="facetwp-tooltip">
                     <span class="icon-question">?</span>
                     <div class="facetwp-tooltip-content">
@@ -173,7 +215,7 @@ class FacetWP_Facet_Select2
             </td>
         </tr>
         <tr>
-            <td><?php _e('Sort by', 'fwp'); ?>:</td>
+            <td><?php _e( 'Sort by', 'fwp' ); ?>:</td>
             <td>
                 <select class="facet-orderby">
                     <option value="count"><?php _e( 'Facet Count', 'fwp' ); ?></option>
@@ -184,7 +226,7 @@ class FacetWP_Facet_Select2
         </tr>
         <tr>
             <td>
-                <?php _e('Hierarchical', 'fwp'); ?>:
+                <?php _e( 'Hierarchical', 'fwp' ); ?>:
                 <div class="facetwp-tooltip">
                     <span class="icon-question">?</span>
                     <div class="facetwp-tooltip-content"><?php _e( 'Is this a hierarchical taxonomy?', 'fwp' ); ?></div>
@@ -199,7 +241,7 @@ class FacetWP_Facet_Select2
         </tr>
         <tr>
             <td>
-                <?php _e('Count', 'fwp'); ?>:
+                <?php _e( 'Count', 'fwp' ); ?>:
                 <div class="facetwp-tooltip">
                     <span class="icon-question">?</span>
                     <div class="facetwp-tooltip-content"><?php _e( 'The maximum number of facet choices to show', 'fwp' ); ?></div>

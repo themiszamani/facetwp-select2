@@ -3,7 +3,7 @@
 Plugin Name: FacetWP - Select2
 Plugin URI: https://facetwp.com/
 Description: Adds the Select2 facet type
-Version: 1.3.1
+Version: 1.3.2
 Author: Matt Gibbs
 Author URI: https://facetwp.com/
 GitHub Plugin URI: https://github.com/FacetWP/facetwp-select2
@@ -24,18 +24,18 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, see <http://www.gnu.org/licenses/>.
 */
 
-if ( !defined( 'ABSPATH' ) ) exit;
+if ( ! defined( 'ABSPATH' ) ) exit;
 
 
 class FWP_Select2
 {
     function __construct() {
-        add_action( 'init', array( $this, 'init' ) );
+        add_action( 'init', array( $this, 'init' ), 12 );
+        add_filter( 'facetwp_facet_types', array( $this, 'register_facet_type' ) );
     }
 
 
     function init() {
-        add_filter( 'facetwp_facet_types', array( $this, 'register_facet_type' ) );
 
         if ( is_admin() ) {
             return;
