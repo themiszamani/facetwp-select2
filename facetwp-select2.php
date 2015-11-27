@@ -37,7 +37,7 @@ class FWP_Select2
 
     function init() {
 
-        if ( is_admin() ) {
+        if ( is_admin() || ! apply_filters( 'facetwp_select2_load_assets', true ) ) {
             return;
         }
 
