@@ -158,8 +158,9 @@ class FacetWP_Facet_Select2
 
             $(this).select2({
                 width: '100%',
-                placeholder: $this.attr('placeholder')
-            })
+                placeholder: $this.attr('placeholder'),
+                allowClear: true
+            });
         });
     });
 })(jQuery);
