@@ -30,12 +30,12 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 class FWP_Select2
 {
     function __construct() {
-        add_action( 'init', array( $this, 'init' ), 12 );
+        add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ) );
         add_filter( 'facetwp_facet_types', array( $this, 'register_facet_type' ) );
     }
 
 
-    function init() {
+    function wp_enqueue_scripts() {
 
         if ( is_admin() || ! apply_filters( 'facetwp_select2_load_assets', true ) ) {
             return;
