@@ -143,7 +143,7 @@ class FacetWP_Facet_Select2
     });
 
     wp.hooks.addAction('facetwp/ready', function() {
-        $(document).on('change', '.facetwp-facet .facetwp-select2', function() {
+        $(document).on('change', '.facetwp-select2', function() {
             var $facet = $(this).closest('.facetwp-facet');
             if ('' != $facet.find(':selected').val()) {
                 FWP.static_facet = $facet.attr('data-name');
@@ -156,13 +156,22 @@ class FacetWP_Facet_Select2
         $('.facetwp-select2').each(function() {
             var $this = $(this);
 
-            $(this).select2({
+            $this.select2({
                 width: '100%',
-                placeholder: $this.attr('placeholder'),
-                allowClear: true
+                placeholder: $this.attr('placeholder')//,
+                //allowClear: true
             });
         });
     });
+
+    /*
+    $(document).on('facetwp-refresh', function() {
+        if (FWP.loaded) {
+            $('.facetwp-select2').select2('destroy');
+            $('.select2-container').remove();
+        }
+    });
+    */
 })(jQuery);
 </script>
 <?php
